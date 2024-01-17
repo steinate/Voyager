@@ -206,8 +206,8 @@ class CurriculumAgent:
         }
         return observation
 
-    def render_human_message(self, *, events, chest_observation):
-        content = ""
+    def render_human_message(self, *, events, chest_observation, final_task):
+        content = "My final task is " + final_task + '. But please note that there may be a series of preparations to complete the final task, such as cutting down trees, making wood pickaxe, find stone and so on, so please set the preparations as the next task before starting the final task.'
         observation = self.render_observation(
             events=events, chest_observation=chest_observation
         )
@@ -237,9 +237,10 @@ class CurriculumAgent:
         print(f"\033[35m****Curriculum Agent human message****\n{content}\033[0m")
         return HumanMessage(content=content)
 
-    def propose_next_task(self, *, events, chest_observation, max_retries=5):
+    def propose_next_task(self, *, events, chest_observation, max_retries=5, final_task):
+        
         if self.progress == 0 and self.mode == "auto":
-            task = "Mine 1 wood log"
+            task = "Mine 8 wood log"
             context = "You can mine one of oak, birch, spruce, jungle, acacia, dark oak, or mangrove logs."
             return task, context
 
@@ -278,9 +279,13 @@ class CurriculumAgent:
         messages = [
             self.render_system_message(),
             self.render_human_message(
-                events=events, chest_observation=chest_observation
+                events=events, chest_observation=chest_observation, final_task = final_task
             ),
         ]
+
+        print("====QwQ====")
+        print(messages)
+        print("====QwQ====")
 
         if self.mode == "auto":
             return self.propose_next_ai_task(messages=messages, max_retries=max_retries)
