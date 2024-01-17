@@ -312,6 +312,16 @@ class Voyager:
             self.resume = True
         self.last_events = self.env.step("")
 
+        confirmed = input("Do you have final task? (y/n)").lower() in ["y", ""]
+        if(confirmed):
+            confirmed_flag = False
+            while not confirmed_flag:
+                final_task = input("Enter task: ")
+                print(f"Final task: {final_task}")
+                confirmed_flag = input("Confirm? (y/n)").lower() in ["y", ""]
+        else:
+            final_task = 'NONE'
+
         while True:
             if self.recorder.iteration > self.max_iterations:
                 print("Iteration limit reached")
@@ -320,6 +330,7 @@ class Voyager:
                 events=self.last_events,
                 chest_observation=self.action_agent.render_chest_observation(),
                 max_retries=5,
+                final_task = final_task,
             )
             print(
                 f"\033[35mStarting task {task} for at most {self.action_agent_task_max_retries} times\033[0m"
