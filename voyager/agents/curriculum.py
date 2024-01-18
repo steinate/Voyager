@@ -133,6 +133,7 @@ class CurriculumAgent:
 
     def render_system_message(self):
         system_message = SystemMessage(content=load_prompt("curriculum"))
+        print("jqs: system*******message here\n", system_message)
         assert isinstance(system_message, SystemMessage)
         return system_message
 
@@ -233,7 +234,7 @@ class CurriculumAgent:
                     should_include = True
                 if should_include:
                     content += observation[key]
-
+        
         print(f"\033[35m****Curriculum Agent human message****\n{content}\033[0m")
         return HumanMessage(content=content)
 
