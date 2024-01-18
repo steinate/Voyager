@@ -25,20 +25,20 @@ class Voyager:
         env_request_timeout: int = 600,
         max_iterations: int = 160,
         reset_placed_if_failed: bool = False,
-        action_agent_model_name: str = "gpt-4",
+        action_agent_model_name: str = "gpt-3.5-turbo", #
         action_agent_temperature: float = 0,
         action_agent_task_max_retries: int = 4,
         action_agent_show_chat_log: bool = True,
         action_agent_show_execution_error: bool = True,
-        curriculum_agent_model_name: str = "gpt-4",
-        curriculum_agent_temperature: float = 0,
+        curriculum_agent_model_name: str = "gpt-3.5-turbo", # 
+        curriculum_agent_temperature: float = 0.1,
         curriculum_agent_qa_model_name: str = "gpt-3.5-turbo",
         curriculum_agent_qa_temperature: float = 0,
         curriculum_agent_warm_up: Dict[str, int] = None,
         curriculum_agent_core_inventory_items: str = r".*_log|.*_planks|stick|crafting_table|furnace"
         r"|cobblestone|dirt|coal|.*_pickaxe|.*_sword|.*_axe",
         curriculum_agent_mode: str = "auto",
-        critic_agent_model_name: str = "gpt-4",
+        critic_agent_model_name: str = "gpt-3.5-turbo", #
         critic_agent_temperature: float = 0,
         critic_agent_mode: str = "auto",
         skill_manager_model_name: str = "gpt-3.5-turbo",
@@ -312,6 +312,16 @@ class Voyager:
             self.resume = True
         self.last_events = self.env.step("")
 
+        confirmed = input("Do you have final task? (y/n)").lower() in ["y", ""]
+        if(confirmed):
+            confirmed_flag = False
+            while not confirmed_flag:
+                final_task = input("Enter task: ")
+                print(f"Final task: {final_task}")
+                confirmed_flag = input("Confirm? (y/n)").lower() in ["y", ""]
+        else:
+            final_task = 'NONE'
+
         while True:
             if self.recorder.iteration > self.max_iterations:
                 print("Iteration limit reached")
@@ -320,6 +330,7 @@ class Voyager:
                 events=self.last_events,
                 chest_observation=self.action_agent.render_chest_observation(),
                 max_retries=5,
+                final_task = final_task,
             )
             print(
                 f"\033[35mStarting task {task} for at most {self.action_agent_task_max_retries} times\033[0m"

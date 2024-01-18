@@ -1,6 +1,8 @@
 import re
 import time
 import json
+from numpy import block
+from regex import P
 import voyager.utils as U
 from javascript import require
 from langchain.chat_models import ChatOpenAI
@@ -9,8 +11,7 @@ from langchain.schema import AIMessage, HumanMessage, SystemMessage
 
 from voyager.prompts import load_prompt
 from voyager.control_primitives_context import load_control_primitives_context
-
-
+from .resource import ResourceManager
 class ActionAgent:
     def __init__(
         self,
@@ -38,6 +39,9 @@ class ActionAgent:
         )
         with open("voyager/agents/rag_dict.json", 'r', encoding='utf-8') as f:
             self.rag_dict = json.load(f)
+
+        self.resource_manager = ResourceManager(ckpt_dir=ckpt_dir)
+
 
     def update_chest_memory(self, chests):
         for position, chest in chests.items():
@@ -103,7 +107,7 @@ class ActionAgent:
         return system_message
 
     def render_human_message(
-        self, *, events, code="", task="", context="", critique=""
+        self, *, events, code="", task="", context="", critique="", resource=[],
     ):
         chat_messages = []
         error_messages = []
@@ -155,6 +159,7 @@ class ActionAgent:
 
         observation += f"Time: {time_of_day}\n\n"
 
+# <<<<<<< pjq
         #TODO Retrieval Augmented Generation: Add block information
         # print('================================================================================')
         # print("voxels: ", type(voxels))
@@ -279,14 +284,29 @@ class ActionAgent:
         # print('================================================================================')
         # print("voxels: ", type(voxels))
         # print(voxels)
+        
+        blocks = ""     
+        pos = f"Position: x={position['x']:.1f}, y={position['y']:.1f}, z={position['z']:.1f}"
         if voxels:
             observation += f"Nearby blocks: {', '.join(voxels)}\n"
+            blocks = f"Nearby blocks: {', '.join(voxels)}"
             for voxel in voxels:
                 if voxel in self.rag_dict.keys():
                     observation += '\t' + voxel + ': ' + self.rag_dict[voxel] + "\n"
             observation += '\n'
+# =======
+#         blocks = ""
+#         pos = f"Position: x={position['x']:.1f}, y={position['y']:.1f}, z={position['z']:.1f}"
+
+#         if voxels:
+#             observation += f"Nearby blocks: {', '.join(voxels)}\n\n"
+#             blocks = f"Nearby blocks: {', '.join(voxels)}"
+#             self.resource_manager.add_new_resource(pos=pos, blocks=blocks)
+# >>>>>>> main
         else:
             observation += f"Nearby blocks: None\n\n"
+
+        
 
         if entities:
             nearby_entities = [
@@ -316,16 +336,28 @@ class ActionAgent:
             observation += self.render_chest_observation()
 
         observation += f"Task: {task}\n\n"
-
+        q = "Task: {task}\n\n"
         if context:
             observation += f"Context: {context}\n\n"
+            q += f"Context: {context}\n\n"
         else:
             observation += f"Context: None\n\n"
+            q += f"Context: None\n\n"
 
         if critique:
             observation += f"Critique: {critique}\n\n"
+            q += f"Critique: {critique}\n\n"
         else:
             observation += f"Critique: None\n\n"
+            q += f"Critique: None\n\n"
+
+        resource_list = self.resource_manager.retrieve_resources(q)
+        if resource_list is not []:
+            observation += "History Postion and Blocks:\n"
+            for (respos, blks) in resource_list:
+                observation += f"{respos}: {blks}\n"
+        else:
+            observation += "History Postion and Blocks:None\n\n"
 
         return HumanMessage(content=observation)
 
